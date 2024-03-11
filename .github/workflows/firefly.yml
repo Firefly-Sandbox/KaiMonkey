@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./terraform/aws
+        working-directory: ./
     env:
       FIREFLY_ACCESS_KEY: ${{ secrets.FIREFLY_ACCESS_KEY }}
       FIREFLY_SECRET_KEY: ${{ secrets.FIREFLY_SECRET_KEY }}
