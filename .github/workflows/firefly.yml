@@ -8,13 +8,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - /**
   pull_request:
     branches:
       - main
-    paths:
-      - /**
   workflow_dispatch:
     inputs:
       apply:
@@ -35,11 +31,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::590184073875:role/GItHubActions
           aws-region: us-east-1
+
       - name: Set deployment parameters
         id: set-params
         run: |-
@@ -50,27 +48,33 @@ jobs:
           else
             echo "::set-output name=apply::false"
           fi
+
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.3"
+          terraform_version: "1.6.5"
           terraform_wrapper: false
+
       - name: Terraform Init
         run: terraform init
+
       - name: Terraform Plan
         id: terraform-plan
         run: terraform plan -json -out=tf.plan > plan_log.jsonl || terraform show -json tf.plan > plan.json
         continue-on-error: true
+
       - name: Firefly Post Plan
         run: |-
           curl -O https://gofirefly-prod-iac-ci-cli-binaries.s3.amazonaws.com/fireflyci/latest/fireflyci_Linux_x86_64.tar.gz
           tar -xf fireflyci_Linux_x86_64.tar.gz
           chmod a+x fireflyci
           ./fireflyci post-plan -l plan_log.jsonl -f plan.json --workspace KaiMonkey
+
       - name: Terraform Apply
         if: steps.set-params.outputs.apply == 'true' && steps.terraform-plan.outcome == 'success'
         run: terraform apply -auto-approve -json > apply_log.jsonl
         continue-on-error: true
+
       - name: Firefly Post Apply
         if: steps.set-params.outputs.apply == 'true'
         run: ./fireflyci post-apply -f apply_log.jsonl --workspace KaiMonkey
