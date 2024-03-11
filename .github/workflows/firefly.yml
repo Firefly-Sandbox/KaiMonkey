@@ -60,7 +60,7 @@ jobs:
 
       - name: Terraform Plan
         id: terraform-plan
-        run: terraform plan -json -out=tf.plan > plan_log.jsonl || terraform show -json tf.plan > plan.json
+        run: terraform plan -json -out=tf.plan > plan_log.jsonl && terraform show -json tf.plan > plan.json
         continue-on-error: true
 
       - name: Firefly Post Plan
